@@ -449,6 +449,41 @@ function webform_civicrm_webform_component_presave(&$component) {
       }
     }
   }
+
+  if(wf_crm_get_field($component['form_key'])) {
+    $sets = wf_crm_get_fields('sets');
+    $customGroupKeys = preg_grep( '/cg/i', array_keys($sets));
+
+    // run only for civicrm custom fields.
+    foreach($customGroupKeys as $customGroupKey) {
+      if(strpos($component['form_key'], $customGroupKey. "_custom")) {
+        $fieldsetKey = get_fieldset_key($component['form_key'], $customGroupKey);
+
+        // check if fieldset already exists
+        $dbResource = db_query("SELECT * FROM {webform_component} WHERE form_key  = '{$fieldsetKey}'");
+        $fieldset = $dbResource->fetchObject();
+
+        // create new fieldset if it does not exist for the custom group
+        if(!$fieldset) {
+          $maxWeight = db_query("SELECT MAX(weight) FROM {webform_component}  WHERE type = 'fieldset'")->fetchField();
+
+          $fieldset = array (
+            'nid' => $component['nid'],
+            'pid' => 0,
+            'form_key' => $fieldsetKey,
+            'name' => ucwords(str_replace('-', ' ', $sets[$customGroupKey]['label'])),
+            'type' => 'fieldset',
+            'weight' => $maxWeight + 1,
+          );
+
+          $componentId = webform_component_insert($fieldset);
+        } else {
+          $componentId = $fieldset->cid;
+        }
+        $component['pid'] = $componentId;
+      }
+    }
+  }
 }
 
 /**
@@ -631,4 +666,20 @@ function _webform_civicrm_status() {
   }
 
   return $status;
+}
+
+/**
+ * returns fieldset key for custom civicrm group
+ *
+ * @param string $formKey
+ * @param string $customGroupKey
+ * @return string $fieldsetKey
+ */
+function get_fieldset_key($formKey, $customGroupKey) {
+  $fieldsetKey = "";
+
+  $explodedFormKey = explode($customGroupKey, $formKey);
+  $fieldsetKey .= $explodedFormKey[0] . $customGroupKey;
+
+  return $fieldsetKey;
 }
