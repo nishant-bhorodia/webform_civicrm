@@ -1704,27 +1704,27 @@ function wf_crm_is_positive($val) {
  * @return array $sets
  */
 function wf_crm_get_empty_sets() {
-    $sets = array();
+  $sets = array();
 
-    $sql = "SELECT cg.id, cg.title, cg.help_pre, cg.extends 
-            FROM civicrm_custom_group cg 
-            LEFT OUTER JOIN civicrm_custom_field cf 
-            ON (cg.id = cf.custom_group_id) 
-            WHERE cf.custom_group_id IS NULL
-            AND cg.is_active <> 0";
-    $dao = CRM_Core_DAO::executeQuery($sql);
+  $sql = "SELECT cg.id, cg.title, cg.help_pre, cg.extends 
+          FROM civicrm_custom_group cg 
+          LEFT OUTER JOIN civicrm_custom_field cf 
+          ON (cg.id = cf.custom_group_id) 
+          WHERE cf.custom_group_id IS NULL
+          AND cg.is_active <> 0";
+  $dao = CRM_Core_DAO::executeQuery($sql);
 
-    while($dao->fetch()) {
-      $set = 'cg' . $dao->id;
-      if ($dao->extends == 'address' || $dao->extends == 'relationship' || $dao->extends == 'membership') {
-        $set = $dao->extends;
-      }
-      $sets[$set] = array(
-        'label' => $dao->title,
-        'entity_type' => strtolower($dao->extends),
-        'help_text' => $dao->help_pre,
-      );
+  while($dao->fetch()) {
+    $set = 'cg' . $dao->id;
+    if ($dao->extends == 'address' || $dao->extends == 'relationship' || $dao->extends == 'membership') {
+      $set = $dao->extends;
     }
+    $sets[$set] = array(
+      'label' => $dao->title,
+      'entity_type' => strtolower($dao->extends),
+      'help_text' => $dao->help_pre,
+    );
+  }
 
-    return $sets;
+  return $sets;
 }
