@@ -310,14 +310,16 @@ class wf_crm_admin_form {
         else {
           $this->addDynamicCustomSetting($fieldset, $sid, 'contact', $n);
         }
-        foreach ($set['fields'] as $fid => $field) {
-          if ($fid == 'contact_contact_sub_type' ||
-            ($fid == 'address_master_id' && count($this->data['contact']) == 1) ||
-            (isset($field['contact_type']) && $field['contact_type'] != $c['contact'][1]['contact_type'])) {
-            continue;
+        if(isset($set['fields'])) {
+          foreach ($set['fields'] as $fid => $field) {
+            if ($fid == 'contact_contact_sub_type' ||
+              ($fid == 'address_master_id' && count($this->data['contact']) == 1) ||
+              (isset($field['contact_type']) && $field['contact_type'] != $c['contact'][1]['contact_type'])) {
+              continue;
+            }
+            $fid = 'civicrm_' . $n . '_contact_' . $i . '_' . $fid;
+            $fieldset[$fid] = $this->addItem($fid, $field);
           }
-          $fid = 'civicrm_' . $n . '_contact_' . $i . '_' . $fid;
-          $fieldset[$fid] = $this->addItem($fid, $field);
         }
         if (isset($set['max_instances'])) {
           $pos[$n . $sid . '_wrapper'][$n . $sid . $i . '_fieldset'] = $fieldset;
@@ -538,9 +540,11 @@ class wf_crm_admin_form {
             'js_select' => $this->addToggle($fs1),
           );
           $this->addDynamicCustomSetting($wrap['custom'][$fs1], $sid, 'activity', $n);
-          foreach ($set['fields'] as $fid => $field) {
-            $fid = "civicrm_{$n}_activity_1_$fid";
-            $wrap['custom'][$fs1][$fid] = $this->addItem($fid, $field);
+          if(isset($set['fields'])) {
+            foreach ($set['fields'] as $fid => $field) {
+              $fid = "civicrm_{$n}_activity_1_$fid";
+              $wrap['custom'][$fs1][$fid] = $this->addItem($fid, $field);
+            }
           }
         }
       }
@@ -622,10 +626,12 @@ class wf_crm_admin_form {
           'js_select' => $this->addToggle($fs1),
         );
         $this->addDynamicCustomSetting($pos[$fs1], $sid, 'case', $n);
-        foreach ($set['fields'] as $fid => $field) {
-          $fid = "civicrm_{$n}_case_1_$fid";
-          if (!$case_type || empty($field['case_types']) || in_array($case_type, $field['case_types'])) {
-            $pos[$fs1][$fid] = $this->addItem($fid, $field);
+        if(isset($set['fields'])) {
+          foreach ($set['fields'] as $fid => $field) {
+            $fid = "civicrm_{$n}_case_1_$fid";
+            if (!$case_type || empty($field['case_types']) || in_array($case_type, $field['case_types'])) {
+              $pos[$fs1][$fid] = $this->addItem($fid, $field);
+            }
           }
         }
       }
@@ -969,9 +975,11 @@ class wf_crm_admin_form {
           'js_select' => $this->addToggle($sid),
         );
         $this->addDynamicCustomSetting($this->form['contribution']['sets'][$sid], $sid, 'contribution', 1);
-        foreach ($set['fields'] as $fid => $field) {
-          $fid = "civicrm_1_contribution_1_$fid";
-          $this->form['contribution']['sets'][$sid][$fid] = $this->addItem($fid, $field);
+        if(isset($set['fields'])) {
+          foreach ($set['fields'] as $fid => $field) {
+            $fid = "civicrm_1_contribution_1_$fid";
+            $this->form['contribution']['sets'][$sid][$fid] = $this->addItem($fid, $field);
+          }
         }
       }
     }
@@ -1033,9 +1041,11 @@ class wf_crm_admin_form {
             'js_select' => $this->addToggle($fs1),
           );
           $this->addDynamicCustomSetting($pos[$fs1], $sid, 'grant', $n);
-          foreach ($set['fields'] as $fid => $field) {
-            $fid = "civicrm_{$n}_grant_1_$fid";
-            $pos[$fs1][$fid] = $this->addItem($fid, $field);
+          if(isset($set['fields'])) {
+            foreach ($set['fields'] as $fid => $field) {
+              $fid = "civicrm_{$n}_grant_1_$fid";
+              $pos[$fs1][$fid] = $this->addItem($fid, $field);
+            }
           }
         }
       }
