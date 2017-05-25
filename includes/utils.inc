@@ -448,9 +448,14 @@ function wf_crm_enabled_fields($node, $submission = NULL, $show_all = FALSE) {
     $fields = wf_crm_get_fields();
     foreach ($node->webform['components'] as $c) {
       $exp = explode('_', $c['form_key'], 5);
+      $customGroupFieldsetKey = "";
       if (count($exp) == 5) {
         list($lobo, $i, $ent, $n, $id) = $exp;
-        if ((isset($fields[$id]) || $id == 'fieldset_fieldset') && $lobo == 'civicrm' && is_numeric($i) && is_numeric($n)) {
+        $explodedId = explode('_', $id);
+        if($explodedId[1] == 'fieldset' && $explodedId[0] != 'fieldset') {
+          $customGroupFieldsetKey = $explodedId[0];
+        }
+        if ((isset($fields[$id]) || $id == 'fieldset_fieldset' || $id == $customGroupFieldsetKey . '_fieldset') && $lobo == 'civicrm' && is_numeric($i) && is_numeric($n)) {
           if (!$show_all && ($ent == 'contact' || $ent == 'participant') && empty($node->webform_civicrm['data']['contact'][$i])) {
             continue;
           }

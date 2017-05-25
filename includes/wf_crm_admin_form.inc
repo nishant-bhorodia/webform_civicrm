@@ -1817,7 +1817,15 @@ class wf_crm_admin_form {
    */
   public static function addFieldset($c, &$field, &$enabled, $settings, $ent = 'contact', $allow_create = FALSE) {
     $type = in_array($ent, self::$fieldset_entities) ? $ent : 'contact';
-    $sid = "civicrm_{$c}_{$type}_1_fieldset_fieldset";
+    if(strpos($field['form_key'], "_custom_")) {
+      $sid = explode('_custom', $field['form_key'])[0] . '_fieldset';
+      $customGroupKey = explode('_', $field['form_key'])[4];
+      $allow_create = TRUE;
+      $isCustom = TRUE; // for custom fields only
+    }
+    else {
+      $sid = "civicrm_{$c}_{$type}_1_fieldset_fieldset";
+    }
     if (!empty($settings['create_fieldsets']) && !isset($enabled[$sid]) && $allow_create) {
       $new_set = array(
         'nid' => $field['nid'],
@@ -1825,11 +1833,15 @@ class wf_crm_admin_form {
         'type' => 'fieldset',
         'weight' => $c,
       );
-      if ($type == 'contact') {
+      $sets = wf_crm_get_fields('sets');
+      if(isset($isCustom)) {
+        $new_set['name'] = $sets[$customGroupKey]['label'];
+        $new_set['weight'] = 200 + (array_search($type, self::$fieldset_entities) * 10 + $c);
+      }
+      elseif ($type == 'contact') {
         $new_set['name'] = wf_crm_contact_label($c, $settings['data']);
       }
       else {
-        $sets = wf_crm_get_fields('sets');
         $new_set['name'] = $sets[$type]['label'] . ($c > 1 ? " $c" : '');
         $new_set['weight'] = 200 + (array_search($type, self::$fieldset_entities) * 10 + $c);
       }
