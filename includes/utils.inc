@@ -1715,7 +1715,7 @@ function wf_crm_get_empty_sets() {
           FROM civicrm_custom_group cg 
           LEFT OUTER JOIN civicrm_custom_field cf 
           ON (cg.id = cf.custom_group_id) 
-          GROUP By cf.custom_group_id";
+          GROUP By cg.id";
 
   $dao = CRM_Core_DAO::executeQuery($sql);
 
