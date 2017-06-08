@@ -23,7 +23,9 @@ function wf_crm_field_options($field, $context, $data) {
   if ($pieces = wf_crm_explode_key($field['form_key'])) {
     list( , $c, $ent, $n, $table, $name) = $pieces;
     // Ensure we have complete info for this field
-    $field += $fields[$table . '_' . $name];
+    if(isset($fields[$table . '_' . $name])) {
+      $field += $fields[$table . '_' . $name];
+    }
     if ($name === 'contact_sub_type') {
       list($contact_types, $sub_types) = wf_crm_get_contact_types();
       $ret = wf_crm_aval($sub_types, $data['contact'][$c]['contact'][1]['contact_type'], array());
@@ -1255,24 +1257,7 @@ function wf_crm_get_fields($var = 'fields') {
     );
 
     // Pull custom fields and match to Webform element types
-    $custom_types = array(
-      'Select' => array('type' => 'select'),
-      'Multi-Select' => array('type' => 'select', 'extra' => array('multiple' => 1)),
-      'AdvMulti-Select' => array('type' => 'select', 'extra' => array('multiple' => 1)),
-      'Radio' => array('type' => 'select', 'extra' => array('aslist' => 0)),
-      'CheckBox' => array('type' => 'select', 'extra' => array('multiple' => 1)),
-      'Text'  => array('type' => 'textfield'),
-      'TextArea' => array('type' => 'textarea'),
-      'RichTextEditor' => array('type' => module_exists('webform_html_textarea') ? 'html_textarea' : 'textarea'),
-      'Select Date' => array('type' => 'date'),
-      'Link'  => array('type' => 'textfield'),
-      'Select Country' => array('type' => 'select'),
-      'Multi-Select Country' => array('type' => 'select', 'extra' => array('multiple' => 1)),
-      'Select State/Province' => array('type' => 'select'),
-      'Multi-Select State/Province' => array('type' => 'select', 'extra' => array('multiple' => 1)),
-      'Autocomplete-Select' => array('type' => 'select'),
-      'File' => array('type' => 'file'),
-    );
+    $custom_types = wf_crm_custom_types_map_array();
     list($contact_types) = wf_crm_get_contact_types();
     $custom_extends = "'" . implode("','", array_keys($contact_types + $sets)) . "'";
     $sql = "
@@ -1734,4 +1719,32 @@ function wf_crm_get_empty_sets() {
   }
 
   return $sets;
+}
+
+/**
+ * Pull custom fields to match with Webform element types
+ * 
+ * @return array
+ */
+function wf_crm_custom_types_map_array() {
+  $custom_types = array(
+    'Select' => array('type' => 'select'),
+    'Multi-Select' => array('type' => 'select', 'extra' => array('multiple' => 1)),
+    'AdvMulti-Select' => array('type' => 'select', 'extra' => array('multiple' => 1)),
+    'Radio' => array('type' => 'select', 'extra' => array('aslist' => 0)),
+    'CheckBox' => array('type' => 'select', 'extra' => array('multiple' => 1)),
+    'Text'  => array('type' => 'textfield'),
+    'TextArea' => array('type' => 'textarea'),
+    'RichTextEditor' => array('type' => module_exists('webform_html_textarea') ? 'html_textarea' : 'textarea'),
+    'Select Date' => array('type' => 'date'),
+    'Link'  => array('type' => 'textfield'),
+    'Select Country' => array('type' => 'select'),
+    'Multi-Select Country' => array('type' => 'select', 'extra' => array('multiple' => 1)),
+    'Select State/Province' => array('type' => 'select'),
+    'Multi-Select State/Province' => array('type' => 'select', 'extra' => array('multiple' => 1)),
+    'Autocomplete-Select' => array('type' => 'select'),
+    'File' => array('type' => 'file'),
+  );
+  
+  return $custom_types;
 }

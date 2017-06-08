@@ -664,3 +664,45 @@ function _webform_civicrm_status() {
 
   return $status;
 }
+
+/**
+ * Implementation of hook_civicrm_pre()
+ * 
+ * Handles enabling/disabling of custom fields
+ * 
+ * 
+ * @param string $op
+ * @param string $objectName
+ * @param integer $id
+ * @param array $params
+ */
+function webform_civicrm_civicrm_pre($op, $objectName, $id, &$params) {
+  if($op == 'edit' && $objectName == 'CustomField') {
+    // Run only if is_active is set, i.e. custom field is being enabled/disabled
+    if(isset($params['is_active'])) {
+      $statusToSet = $params['is_active'];
+      $queryParams = array(
+        'sequential' => 1,
+        'return' => "custom_group_id, is_active",
+        'id' => $id,
+        'options' => array('limit' => 1),
+      );
+      $result = civicrm_api3('CustomField', 'get', $queryParams);
+      // run only if this field already exist in db to make sure we donot run it for create op
+      if($result['count'] == 1) {
+        module_load_include('inc', 'webform_civicrm', 'includes/wf_crm_admin_form');
+        $previousStatus = $result['values'][0]['is_active'];
+        $customGroupId = $result['values'][0]['custom_group_id'];
+        if($statusToSet == FALSE && $previousStatus == TRUE) {
+          $opName = 'disable';
+        }
+        else {
+          $opName = 'enable';
+        }
+        if(isset($opName)) {
+          wf_crm_admin_form::handleDynamicCustomField($opName, $id, $customGroupId);
+        }
+      } 
+    }
+  }
+}

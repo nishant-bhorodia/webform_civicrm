@@ -1980,7 +1980,7 @@ class wf_crm_admin_form {
           if ($pieces = wf_crm_explode_key($component['form_key'])) {
             list(, $c, $ent, $n, $table, $name) = $pieces;
             if (!empty($node->webform_civicrm['data'][$ent][$c]["dynamic_custom_cg$gid"])) {
-              if ($op == 'delete') {
+              if ($op == 'delete' || $op == 'disable') {
                 webform_component_delete($node, $component);
               }
               else {
@@ -1997,7 +1997,7 @@ class wf_crm_admin_form {
         }
       }
       // Handle create new components
-      if ($op == 'create') {
+      if ($op == 'create' || $op == 'enable') {
         $ent = $sets["cg$gid"]['entity_type'];
         foreach ($node->webform_civicrm['data'][$ent] as $c => $item) {
           if (!empty($item["dynamic_custom_cg$gid"]) && empty($updated[$ent][$c])) {
@@ -2010,6 +2010,22 @@ class wf_crm_admin_form {
                 $new['weight'] = $component['weight'] + 1;
                 $new['pid'] = $component['pid'];
               }
+            }
+            if($op == 'enable') {
+              $queryParams = array(
+                'sequential' => 1,
+                'id' => $fid,
+                'options' => array('limit' => 1),
+              );
+              $result = civicrm_api3('CustomField', 'get', $queryParams);
+              $val = $result['values'][0];
+              $new['name'] = $val['label'];
+              $new['required'] = $val['is_required'];
+              $new['value'] = implode(',', wf_crm_explode_multivalue_str($val['default_value']));
+              $new['data_type'] = $val['data_type'];
+
+              $custom_types = wf_crm_custom_types_map_array();
+              $new['type'] = $custom_types[$val['html_type']]['type'];
             }
             wf_crm_admin_form::insertComponent($new, $enabled, $node->webform_civicrm);
           }
