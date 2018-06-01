@@ -1184,7 +1184,10 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
       $params['contact_id'] = $cid;
       // The api won't let us manually set status without this weird param
       $params['skipStatusCal'] = !empty($params['status_id']);
-
+      // Process date rules only for new memberships.
+      if (!isset($params['id'])) {
+        $params = $this->processMembershipDateRules($cid, $params);
+      }
       $result = wf_civicrm_api('membership', 'create', $params);
 
       if (!empty($result['id'])) {
@@ -1210,6 +1213,51 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
         }
       }
     }
+  }
+
+  /**
+   * Process membership date rules
+   */
+  private function processMembershipDateRules($cid, $params) {
+    $membershipParams = array (
+      'sequential' => 1,
+      'active_only' => 1,
+      'contact_id' => $cid,
+      'options' => array ('sort' => "end_date DESC", 'limit' => 1),
+    );
+
+    // Process start date rules.
+    if (!empty($params['start_date_rules']) && $params['start_date_rules'] == 2){
+      // Handle case when memberships are selected for start date rules.
+      if (!empty($params['start_date_memberships'])) {
+        $membershipParams['membership_type_id'] = array (
+          'IN' => $params['start_date_memberships']
+        );
+      }
+
+      $activeMemberships = civicrm_api3('Membership', 'get', $membershipParams);
+      if ($activeMemberships['count']) {
+        $activeMembershipsEndDate = new DateTime($activeMemberships['values'][0]['end_date']);
+        $start_date = $activeMembershipsEndDate->modify('+1 day');
+        $params['start_date'] = $start_date->format('Ymd');
+      }
+    }
+
+    // Process end date rules.
+    if (!empty($params['end_date_rules']) && $params['end_date_rules'] == 2) {
+      // Handle case when memberships are selected for end date rules.
+      if (!empty($params['end_date_memberships'])) {
+        $membershipParams['membership_type_id'] = array (
+          'IN' => $params['end_date_memberships']
+        );
+      }
+      $activeMemberships = civicrm_api3('Membership', 'get', $membershipParams);
+      if ($activeMemberships['count']) {
+        $activeMembershipsEndDate = $activeMemberships['values'][0]['end_date'];
+        $params['end_date'] = $activeMembershipsEndDate;
+      }
+    }
+    return $params;
   }
 
   /**
