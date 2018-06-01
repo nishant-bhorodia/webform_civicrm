@@ -77,6 +77,9 @@ function wf_crm_field_options($field, $context, $data) {
     elseif ($table == 'membership' && $name == 'num_terms') {
       $ret = drupal_map_assoc(range(1, 9));
     }
+    elseif ($table == 'membership' && in_array($name, array('start_date_rules', 'end_date_rules'))) {
+      $ret = array(0 => t('Automatic'), 1 => t('User Select'), 2 => t('Relative to active membership end date'));
+    }
     // Aside from the above special cases, most lists can be fetched from api.getoptions
     else {
       $params = array('field' => $name, 'context' => 'create');
@@ -91,6 +94,10 @@ function wf_crm_field_options($field, $context, $data) {
       else {
         // Pass data into api.getoptions for contextual filtering
         $params += wf_crm_aval($data, "$ent:$c:$table:$n", array());
+        // We need the same options as membership_type_id for start_date_memberships and end_date_memberships
+        if (in_array($params['field'], array('start_date_memberships', 'end_date_memberships'))) {
+          $params['field'] = 'membership_type_id';
+        }
       }
       $ret = wf_crm_apivalues($table, 'getoptions', $params);
 
