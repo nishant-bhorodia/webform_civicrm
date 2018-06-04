@@ -1186,10 +1186,6 @@ function wf_crm_get_fields($var = 'fields') {
         'expose_list' => TRUE,
         'extra' => array('multiple' => 1),
       );
-      $fields['membership_pro_rate_membership'] = array(
-        'name' => t('Pro-rate Price of Membership'),
-        'type' => 'checkbox',
-      );
     }
     // Add campaign fields
     if (in_array('CiviCampaign', $components)) {

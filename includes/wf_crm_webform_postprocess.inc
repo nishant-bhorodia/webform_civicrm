@@ -1254,6 +1254,9 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
       $activeMemberships = civicrm_api3('Membership', 'get', $membershipParams);
       if ($activeMemberships['count']) {
         $activeMembershipsEndDate = $activeMemberships['values'][0]['end_date'];
+        if (empty($params['start_date'])) {
+          $params['start_date'] = date('Y-m-d');
+        }
         $params['end_date'] = $activeMembershipsEndDate;
       }
     }
@@ -1570,6 +1573,11 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
               }
             }
 
+            // Pro rate logic.
+            if (!empty($item['end_date_rules']) && !empty($item['pro_rate_memberships'])) {
+              $price = $this->pro_rated_membership_fee($type, $price, $c, $item);
+            }
+
             if ($price) {
               $this->line_items[] = array(
                 'qty' => $item['num_terms'],
@@ -1607,6 +1615,39 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
       }
     }
     return round($this->totalContribution, 2);
+  }
+
+  /**
+   * Calculate pro rated membership fee.
+   * @param Integer $type
+   * @param Float $price
+   * @param Integer $c
+   * @param Array $item
+   * @return Float $price
+   */
+  private function pro_rated_membership_fee($type, $price, $c, $item) {
+    $durationInterval = $this->getMembershipTypeField($type, 'duration_interval');
+    $durationUnit = $this->getMembershipTypeField($type, 'duration_unit');
+
+    // Calculate price/day.
+    $dateToday = date('Y-m-d');
+    $dateAfterGiveDuration = date('Y-m-d', strtotime("{$dateToday} +{$durationInterval} {$durationUnit}"));
+    $dateToday = date_create($dateToday);
+    $dateAfterGiveDuration = date_create($dateAfterGiveDuration);
+    $durationInDays = date_diff($dateToday, $dateAfterGiveDuration)->format('%a');
+
+    $pricePerDay = $price / $durationInDays;
+
+    // Find number of pro rate days.
+    $params = $this->processMembershipDateRules($this->existing_contacts[$c], $item);
+    $start_date = date_create($params['start_date']);
+    $end_date = date_create($params['end_date']);
+    $proRateDays = date_diff($start_date, $end_date)->format('%a');
+
+    // Calculate Pro Rated membership fee.
+    $price = $pricePerDay * $proRateDays;
+
+    return $price;
   }
 
   /**

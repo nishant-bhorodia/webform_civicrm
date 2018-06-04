@@ -970,6 +970,15 @@ class wf_crm_admin_form {
             }
           }
         }
+
+        // Pro rate price checkbox
+        $fieldName = 'pro_rate_memberships';
+        $fidProRate = "civicrm_{$c}_membership_{$n}_membership_{$fieldName}";
+        $this->form['membership'][$c]['membership'][$fs][$fidProRate] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Pro Rate price of Membership').'&nbsp;<span class="crm-container"><a class="helpicon" href="#membership_pro_rate_membership">&nbsp;</a></span>',
+          '#default_value' => !empty($this->settings['data']['membership'][$c]['membership'][$n][$fieldName]),
+        );
       }
     }
   }
@@ -1509,6 +1518,9 @@ class wf_crm_admin_form {
           if (!in_array($ent, array('contact', 'participant', 'membership')) || isset($this->data['contact'][$c])) {
             $this->data[$ent][$c][$table][$n][$name] = $val;
           }
+        }
+        if ($name == 'pro_rate_memberships') {
+          $this->data[$ent][$c][$table][$n][$name] = $val;
         }
       }
     }
