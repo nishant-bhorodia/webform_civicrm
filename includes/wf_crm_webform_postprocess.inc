@@ -1574,7 +1574,12 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
             }
 
             // Pro rate logic.
-            if (!empty($item['end_date_rules']) && !empty($item['pro_rate_memberships'])) {
+            if (!empty($item['end_date_rules'])
+                &&
+                !empty($item['pro_rate_memberships'])
+                &&
+                $item['end_date_rules'] == 2
+            ) {
               $price = $this->pro_rated_membership_fee($type, $price, $c, $item);
             }
 
