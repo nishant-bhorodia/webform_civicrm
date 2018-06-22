@@ -84,6 +84,9 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
       $this->validateParticipants();
     }
 
+    // Validate end dates as per membership date rules.
+    $this->validateMembershipDateRules();
+
     // Process live contribution. If the transaction is unsuccessful it will trigger a form validation error.
     if ($this->contribution_page) {
       // Ensure contribution js is still loaded if the form has to refresh
@@ -102,6 +105,35 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
     // Even though this object is destroyed between page submissions, this trick allows us to persist some data - see above
     $form_state['civicrm']['ent'] = $this->ent;
     $form_state['civicrm']['line_items'] = $this->line_items;
+  }
+
+  /**
+   * Validate function for membership date rules.
+   */
+  public function validateMembershipDateRules() {
+    if (!empty($this->data['membership'])) {
+      foreach ($this->ent['contact'] as $c => $contact) {
+        if ($contact['id'] && isset($this->all_sets['membership']) && !empty($this->data['membership'][$c]['number_of_membership'])) {
+          $isError = FALSE;
+          $membershipFieldName = '';
+          foreach (wf_crm_aval($this->data, "membership:$c:membership", array()) as $n => $params) {
+            $params = $this->processMembershipDateRules($contact['id'], $params);
+            $membershipFieldName = "civicrm_{$c}_membership_{$n}_membership_membership_type_id";
+            if (!empty($params['end_date_rules']) && $params['end_date_rules'] == 2 && empty($params['end_date'])) {
+              $isError = TRUE;
+              break;
+            }
+            elseif (!empty($params['end_date']) && (strtotime($params['end_date']) < time())) {
+              $isError = TRUE;
+              break;
+            }
+          }
+          if ($isError) {
+            form_set_error($membershipFieldName, 'Unfortuntately you cannot purchase this item as your membership has expired.');
+          }
+        }
+      }
+    }
   }
 
   /**
