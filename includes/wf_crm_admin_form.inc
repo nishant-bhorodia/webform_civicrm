@@ -978,12 +978,29 @@ class wf_crm_admin_form {
           '#type' => 'checkbox',
           '#title' => t('Pro Rate price of Membership').'&nbsp;<span class="crm-container"><a class="helpicon" href="#membership_pro_rate_membership">&nbsp;</a></span>',
           '#default_value' => !empty($this->settings['data']['membership'][$c]['membership'][$n][$fieldName]),
-          '#states' => array (
-            'visible' => array (
-              ":input[name='civicrm_{$c}_membership_{$n}_membership_end_date_rules']" => array ('value' => 2),
-            ),
+        );
+        // Handle dependent fields for membership date rules.
+        $dependentFields = array (
+          array (
+            'field' => "civicrm_{$c}_membership_{$n}_membership_start_date_memberships",
+            'depends_on' => "civicrm_{$c}_membership_{$n}_membership_start_date_rules",
+          ),
+          array (
+            'field' => "civicrm_{$c}_membership_{$n}_membership_end_date_memberships",
+            'depends_on' => "civicrm_{$c}_membership_{$n}_membership_end_date_rules",
+          ),
+          array (
+            'field' => "civicrm_{$c}_membership_{$n}_membership_pro_rate_memberships",
+            'depends_on' => "civicrm_{$c}_membership_{$n}_membership_end_date_rules",
           ),
         );
+        foreach ($dependentFields as $dependentField) {
+          $this->form['membership'][$c]['membership'][$fs][$dependentField['field']]['#states'] = array (
+            'visible' => array (
+              ":input[name='{$dependentField['depends_on']}']" => array ('value' => 2),
+            ),
+          );
+        }
       }
     }
   }
