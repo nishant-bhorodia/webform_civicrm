@@ -978,6 +978,11 @@ class wf_crm_admin_form {
           '#type' => 'checkbox',
           '#title' => t('Pro Rate price of Membership').'&nbsp;<span class="crm-container"><a class="helpicon" href="#membership_pro_rate_membership">&nbsp;</a></span>',
           '#default_value' => !empty($this->settings['data']['membership'][$c]['membership'][$n][$fieldName]),
+          '#states' => array (
+            'visible' => array (
+              ":input[name='civicrm_{$c}_membership_{$n}_membership_end_date_rules']" => array ('value' => 2),
+            ),
+          ),
         );
       }
     }

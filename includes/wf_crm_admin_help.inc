@@ -323,7 +323,13 @@ class wf_crm_admin_help {
   
   public static function membership_pro_rate_membership() {
     print '<p>'.
-      t('If this box is ticket, the membership price will be calculated based on the number of days left until the end date compared to the number of days in a regular membership period').
+      t('If this box is ticked, the membership price will be calculated based on the number of days left until the end date compared to the number of days in a regular membership period').
+      '</p>';
+  }
+
+  public static function membership_start_date_memberships() {
+    print '<p>'.
+      t('If you do not select a membership type, new membership will start immediately once the current active membership with the latest end date has expired.').
       '</p>';
   }
 
