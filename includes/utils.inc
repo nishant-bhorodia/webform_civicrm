@@ -1173,12 +1173,20 @@ function wf_crm_get_fields($var = 'fields') {
         'expose_list' => TRUE,
         'extra' => array('multiple' => 1),
       );
+      $fields['membership_rule_start_date'] = array (
+        'name' => t('Start Date'),
+        'type' => 'date',
+      );
       $fields['membership_end_date_rules'] = array(
         'name' => t('End Date'),
         'type' => 'select',
         'expose_list' => TRUE,
         'value' => 0,
         'exposed_empty_option' => t('Automatic'),
+      );
+      $fields['membership_rule_end_date'] = array (
+        'name' => t('End Date'),
+        'type' => 'date',
       );
       $fields['membership_end_date_memberships'] = array (
         'name' => t('Select Membership Types'),

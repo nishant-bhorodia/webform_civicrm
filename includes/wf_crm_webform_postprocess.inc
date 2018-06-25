@@ -85,7 +85,9 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
     }
 
     // Validate end dates as per membership date rules.
-    $this->validateMembershipDateRules();
+    if(!empty($this->data['membership'])) {
+      $this->validateMembershipDateRules();
+    }
 
     // Process live contribution. If the transaction is unsuccessful it will trigger a form validation error.
     if ($this->contribution_page) {
@@ -117,7 +119,7 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
           $isError = FALSE;
           $membershipFieldName = '';
           foreach (wf_crm_aval($this->data, "membership:$c:membership", array()) as $n => $params) {
-            $params = $this->processMembershipDateRules($contact['id'], $params);
+            $params = $this->processMembershipDateRules($contact['id'], $params, $c, $n);
             $membershipFieldName = "civicrm_{$c}_membership_{$n}_membership_membership_type_id";
             if (!empty($params['end_date_rules']) && $params['end_date_rules'] == 2 && empty($params['end_date'])) {
               $isError = TRUE;
@@ -1218,7 +1220,7 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
       $params['skipStatusCal'] = !empty($params['status_id']);
       // Process date rules only for new memberships.
       if (!isset($params['id'])) {
-        $params = $this->processMembershipDateRules($cid, $params);
+        $params = $this->processMembershipDateRules($cid, $params, $c, $n);
       }
       $result = wf_civicrm_api('membership', 'create', $params);
 
@@ -1250,16 +1252,28 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
   /**
    * Process membership date rules
    */
-  private function processMembershipDateRules($cid, $params) {
+  private function processMembershipDateRules($cid, $params, $c, $n) {
     $membershipParams = array (
       'sequential' => 1,
       'active_only' => 1,
       'contact_id' => $cid,
       'options' => array ('sort' => "end_date DESC", 'limit' => 1),
     );
+    $rawValues = _webform_client_form_submit_flatten($this->node, wf_crm_aval($this->form_state, 'values:submitted'));
 
     // Process start date rules.
-    if (!empty($params['start_date_rules']) && $params['start_date_rules'] == 2){
+    if (!empty($params['start_date_rules']) && $params['start_date_rules'] == 1) {
+      $fieldName = 'rule_start_date';
+      $fieldKey = "civicrm_{$c}_membership_{$n}_membership_{$fieldName}";
+      $componentId = $this->getComponent($fieldKey)['cid'];
+      if (!empty($params['rule_start_date'])) {
+        $params['start_date'] = $params['rule_start_date'];
+      }
+      elseif (!empty($rawValues[$componentId])) {
+        $params['start_date'] = $rawValues[$componentId]['year'] . '-' . $rawValues[$componentId]['month'] . '-' . $rawValues[$componentId]['day']; 
+      }
+    }
+    elseif (!empty($params['start_date_rules']) && $params['start_date_rules'] == 2){
       // Handle case when memberships are selected for start date rules.
       if (!empty($params['start_date_memberships'])) {
         $membershipParams['membership_type_id'] = array (
@@ -1276,7 +1290,18 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
     }
 
     // Process end date rules.
-    if (!empty($params['end_date_rules']) && $params['end_date_rules'] == 2) {
+    if (!empty($params['end_date_rules']) && $params['end_date_rules'] == 1) {
+      $fieldName = 'rule_end_date';
+      $fieldKey = "civicrm_{$c}_membership_{$n}_membership_{$fieldName}";
+      $componentId = $this->getComponent($fieldKey)['cid'];
+      if (!empty($params['rule_end_date'])) {
+        $params['end_date'] = $params['rule_end_date'];
+      }
+      elseif (!empty($rawValues[$componentId])) {
+        $params['start_date'] = $rawValues[$componentId]['year'] . '-' . $rawValues[$componentId]['month'] . '-' . $rawValues[$componentId]['day']; 
+      }
+    }
+    elseif (!empty($params['end_date_rules']) && $params['end_date_rules'] == 2) {
       // Handle case when memberships are selected for end date rules.
       if (!empty($params['end_date_memberships'])) {
         $membershipParams['membership_type_id'] = array (
@@ -1612,7 +1637,7 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
                 &&
                 $item['end_date_rules'] == 2
             ) {
-              $price = $this->pro_rated_membership_fee($type, $price, $c, $item);
+              $price = $this->pro_rated_membership_fee($type, $price, $c, $n, $item);
             }
 
             if ($price) {
@@ -1662,7 +1687,7 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
    * @param Array $item
    * @return Float $price
    */
-  private function pro_rated_membership_fee($type, $price, $c, $item) {
+  private function pro_rated_membership_fee($type, $price, $c, $n, $item) {
     $durationInterval = $this->getMembershipTypeField($type, 'duration_interval');
     $durationUnit = $this->getMembershipTypeField($type, 'duration_unit');
 
@@ -1676,7 +1701,7 @@ class wf_crm_webform_postprocess extends wf_crm_webform_base {
     $pricePerDay = $price / $durationInDays;
 
     // Find number of pro rate days.
-    $params = $this->processMembershipDateRules($this->existing_contacts[$c], $item);
+    $params = $this->processMembershipDateRules($this->existing_contacts[$c], $item, $c, $n);
     $start_date = date_create($params['start_date']);
     $end_date = date_create($params['end_date']);
     $proRateDays = date_diff($start_date, $end_date)->format('%a');
