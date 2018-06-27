@@ -332,6 +332,12 @@ class wf_crm_admin_help {
       t('If you do not select a membership type, new membership will start immediately once the current active membership with the latest end date has expired.').
       '</p>';
   }
+  
+  public static function membership_end_date_memberships() {
+    print '<p>'.
+      t('If you do not select a membership type, new membership will end when the current active membership with the latest end date expires.').
+      '</p>';
+  }
 
   public static function membership_fee_amount() {
     print '<p>' .
