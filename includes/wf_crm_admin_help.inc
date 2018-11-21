@@ -308,6 +308,18 @@ class wf_crm_admin_help {
       '</p>';
   }
 
+  public static function membership_start_date_rules() {
+    print '<p>'.
+      t('\'Automatic\' indicates that the start date will follow normal CiviCRM rules. i.e. New memberships will start immediately from date of sign-up and renewals will extend memberships.').
+      '</p><br /><p>'.
+      t('User select will create a new webform date component that the administrator can configure in many ways including adding a fixed or relative start or end date.').'</p>'.
+      '</p><br /><p>'.
+      t('\'Relative to active membership end date\' will modify the start date of the new membership as follows:
+        <p>It will first check whether the user has an existing membership of this type. If so it will follow the automatic membership rules.</p>
+        <p>If the user does not have a membership of this type, it will create a new membership and then check if the user has any active memberships of the relevant types specified. If not then the system will follow automatic membership rules.</p>
+        <p>If so it will set the start date of the new membership to be the day following the end date of the existing active membership.</p>
+        <p>If the user currently has multiple relevant membership types the start date will be one day following the end date of the membership with the latest end date.</p>');
+  }
   public static function membership_fee_amount() {
     print '<p>' .
       t('Price for this membership per term. If this field is enabled, the default minimum membership fee from CiviCRM membership type settings will not be loaded.') .

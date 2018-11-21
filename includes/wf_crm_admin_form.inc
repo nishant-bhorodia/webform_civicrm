@@ -1309,6 +1309,12 @@ class wf_crm_admin_form {
       if ($field['type'] != 'hidden') {
         $options += array('create_civicrm_webform_element' => t('- User Select -'));
       }
+      // Remove 'create_civicrm_webform_element' option for membership date rules
+      if (strpos($field['form_key'], '_start_date_rules') !== FALSE
+          || 
+          strpos($field['form_key'], '_start_date_memberships') !== FALSE) {
+           unset($options['create_civicrm_webform_element']);
+      }
       $options += wf_crm_field_options($field, 'config_form', $this->data);
       $item += array(
         '#type' => 'select',

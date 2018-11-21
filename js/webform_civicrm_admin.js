@@ -512,7 +512,16 @@ var wfCiviAdmin = (function ($, D) {
           $target.show();
         }
       }).change();
-
+      $('select[name$=_membership_start_date_rules]', context).change(function(e, type) {
+        var $dateRuleMembershipField = $(this).parent().siblings('[class$="-start-date-memberships"]');
+        var $relativeToExistingMembership = 2;
+        if ($(this).val() == $relativeToExistingMembership) {
+          $dateRuleMembershipField.show();
+        }
+        else {
+          $dateRuleMembershipField.hide();
+        }
+      }).trigger('change', 'init');
       function billingMessages() {
         var $pageSelect = $('[name=civicrm_1_contribution_1_contribution_contribution_page_id]');
         // Warning about contribution page with no email
